@@ -15,10 +15,13 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 add_executable(${PROJECT_NAME}
   main.cpp
   Logger.h Logger.cpp
+  json/json.hpp
+  UsbDevice.h UsbDevice.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/libusb
+    ${CMAKE_CURRENT_SOURCE_DIR}/json
 )
 
 target_link_libraries(${PROJECT_NAME}
