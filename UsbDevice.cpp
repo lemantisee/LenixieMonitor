@@ -59,13 +59,12 @@ std::string UsbDevice::read()
 {
     std::string buffer;
     buffer.resize(64);
-    int recievedLength = 0;
 
     if (int res = libusb_interrupt_transfer(mHandle,
                                             0x81,
                                             (unsigned char *) buffer.data(),
                                             int(buffer.size()),
-                                            &recievedLength,
+                                            nullptr,
                                             0);
         res != LIBUSB_SUCCESS ) {
         LOG_ERROR("Unable to recieve data %i", res);
@@ -73,6 +72,22 @@ std::string UsbDevice::read()
     }
 
     return buffer;
+}
+
+bool UsbDevice::write(const std::string &data)
+{
+    if (int res = libusb_interrupt_transfer(mHandle,
+                                            0x01,
+                                            (unsigned char *) data.data(),
+                                            int(data.size()),
+                                            nullptr,
+                                            0);
+        res != LIBUSB_SUCCESS ) {
+        LOG_ERROR("Unable to send data. Code %i. %s", res, libusb_strerror(res));
+        return false;
+    }
+
+    return true;
 }
 
 libusb_device *UsbDevice::findDevice(uint32_t vid, uint32_t pid) const

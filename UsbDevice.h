@@ -13,6 +13,7 @@ public:
     bool open(uint32_t vid, uint32_t pid);
 
     std::string read();
+    bool write(const std::string &data);
 
 private:
     libusb_device *findDevice(uint32_t vid, uint32_t pid) const;
