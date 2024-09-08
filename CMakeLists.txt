@@ -17,6 +17,8 @@ add_executable(${PROJECT_NAME}
   Logger.h Logger.cpp
   json/json.hpp
   UsbDevice.h UsbDevice.cpp
+  DeviceLogger.h DeviceLogger.cpp
+  DeviceCommand.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
