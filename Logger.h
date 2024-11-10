@@ -17,20 +17,19 @@ public:
 
     template<typename... Args>
     static void log(Type type, const char* file, int line, const char *fmt, Args... args) {
-        std::string logString = stringFormat("[%s:%i]", file, line);
+        std::string logString = format("[%s:%i]", file, line);
 
         if (type == Error) {
             logString += "ERROR:";
         }
 
-        logString += stringFormat(fmt, args...);
+        logString += format(fmt, args...);
         // std::printf("%s\n", logString.c_str());
         qDebug() << logString.c_str();
     }
 
-private:
     template<typename... Args>
-    static std::string stringFormat(const char *fmt, Args... args)
+    static std::string format(const char *fmt, Args... args)
     {
         int size_s = std::snprintf(nullptr, 0, fmt, args...) + 1; // Extra space for '\0'
         if (size_s <= 0) {

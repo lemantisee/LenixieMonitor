@@ -22,6 +22,10 @@ void DeviceLogger::process()
         return;
     }
 
+    if(!mDevice->isOpened()) {
+        return;
+    }
+
     nlohmann::json jsonCommand;
     jsonCommand["id"] = GetLog;
 
@@ -36,7 +40,43 @@ void DeviceLogger::process()
     }
 
     std::string buffer = mDevice->read();
-    LOG(buffer.c_str());
+
+    if (buffer.empty()) {
+        LOG("Empty buffer");
+        return;
+    }
+
+    std::string log = parseLog(std::move(buffer));
+
+    if (!log.empty()) {
+        LOG("\n\t%s", log.c_str());
+    }
 }
 
+std::string DeviceLogger::parseLog(std::string str)
+{
+    nlohmann::json jLog = nlohmann::json::parse(str, nullptr, false);
+    if (jLog.empty()) {
+        return {};
+    }
 
+    PanelCommandId id = jLog.value("id", UnknownCommand);
+
+    switch (id) {
+    case LogUnit:
+        mLogBuffer += jLog.value("d", "");
+        break;
+    case LogUnitEnd: {
+        std::string log = mLogBuffer + jLog.value("d", "");
+        mLogBuffer.clear();
+        return log;
+    }
+    case LogEnd:
+        mLogBuffer.clear();
+        break;
+    default:
+        break;
+    }
+
+    return {};
+}

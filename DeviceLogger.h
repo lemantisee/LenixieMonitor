@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class UsbDevice;
 
 class DeviceLogger
@@ -11,5 +13,8 @@ public:
     void process();
 
 private:
+    std::string parseLog(std::string str);
+
     UsbDevice *mDevice = nullptr;
+    std::string mLogBuffer;
 };

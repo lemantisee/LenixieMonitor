@@ -3,6 +3,9 @@
 enum PanelCommandId {
     UnknownCommand = 0,
     EchoCommand = 1,
-    GetLog = 2,
-    LogUnit = 3,
+    EnableLog = 2,
+    GetLog = 3,
+    LogUnit = 4,
+    LogUnitEnd = 5,
+    LogEnd = 6,
 };

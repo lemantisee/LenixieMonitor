@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(UsbMonitor LANGUAGES CXX)
+project(LenixieMonitor LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -13,12 +13,14 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_executable(${PROJECT_NAME}
-  main.cpp
-  Logger.h Logger.cpp
-  json/json.hpp
-  UsbDevice.h UsbDevice.cpp
-  DeviceLogger.h DeviceLogger.cpp
-  DeviceCommand.h
+    main.cpp
+
+    json/json.hpp
+    UsbDevice.h UsbDevice.cpp
+    DeviceLogger.h DeviceLogger.cpp
+    Logger.h
+    DeviceCommand.h
+    UsbWatcher.h UsbWatcher.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -29,10 +31,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
     Qt${QT_VERSION_MAJOR}::Core
     ${CMAKE_CURRENT_SOURCE_DIR}/libusb/libusb-1.0.lib
-)
-
-include(GNUInstallDirs)
-install(TARGETS UsbMonitor
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
