@@ -2,7 +2,7 @@
 
 #include "Logger.h"
 
-UsbWatcher::UsbWatcher() {}
+UsbWatcher::UsbWatcher(QObject *parent) : QObject(parent) {}
 
 UsbWatcher::~UsbWatcher()
 {
@@ -10,12 +10,7 @@ UsbWatcher::~UsbWatcher()
         return;
     }
 
-    mThread.request_stop();
-    if (mThread.joinable()) {
-        mThread.join();
-    }
-
-    libusb_exit(nullptr);
+    stop();
 }
 
 bool UsbWatcher::start(int vid, int pid)
@@ -32,9 +27,16 @@ bool UsbWatcher::start(int vid, int pid)
     return true;
 }
 
-void UsbWatcher::onEvent(std::function<void(int, int, Event)> func)
+void UsbWatcher::stop()
 {
-    mEventCallback = std::move(func);
+    mThread.request_stop();
+    if (mThread.joinable()) {
+        mThread.join();
+    }
+
+    libusb_exit(nullptr);
+
+    mInited = false;
 }
 
 bool UsbWatcher::findDevice(uint32_t vid, uint32_t pid) const
@@ -72,10 +74,11 @@ void UsbWatcher::process(uint32_t vid, uint32_t pid)
     while (!token.stop_requested()) {
         bool state = findDevice(vid, pid);
         if (deviceState != state) {
-            Event event = state ? Arrived : Left;
             deviceState = state;
-            if (mEventCallback) {
-                mEventCallback(vid, pid, event);
+            if (state) {
+                emit arrived();
+            } else {
+                emit left();
             }
         }
 

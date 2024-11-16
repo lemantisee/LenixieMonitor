@@ -1,21 +1,24 @@
 #pragma once
 
+#include <QObject>
+
 #include <thread>
-#include <functional>
 
 #include "libusb.h"
 
-class UsbWatcher
+class UsbWatcher : public QObject
 {
+    Q_OBJECT
 public:
-    enum Event { Arrived, Left };
-
-    UsbWatcher();
+    UsbWatcher(QObject *parent);
     ~UsbWatcher();
 
     bool start(int vid, int pid);
+    void stop();
 
-    void onEvent(std::function<void(int vid, int pid, Event event)> func);
+signals:
+    void arrived();
+    void left();
 
 private:
     bool findDevice(uint32_t vid, uint32_t pid) const;
@@ -24,5 +27,4 @@ private:
     libusb_context *mUsbContext = nullptr;
     bool mInited = false;
     std::jthread mThread;
-    std::function<void(int vid, int pid, Event event)> mEventCallback;
 };

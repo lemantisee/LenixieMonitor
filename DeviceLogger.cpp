@@ -1,82 +1,98 @@
 #include "DeviceLogger.h"
 
+#include <QTimer>
+
 #include "UsbDevice.h"
 #include "json.hpp"
-#include "DeviceCommand.h"
 
 #include "Logger.h"
 
-
-DeviceLogger::DeviceLogger() {}
-
-bool DeviceLogger::init(UsbDevice *device)
+DeviceLogger::DeviceLogger(UsbDevice *device, QObject *parent) : QObject(parent)
 {
     mDevice = device;
-    return true;
+
+    mTimer = new QTimer(this);
+    mTimer->setInterval(std::chrono::milliseconds(50));
+
+    connect(mTimer, &QTimer::timeout, this, &DeviceLogger::pullLog);
 }
 
-void DeviceLogger::process()
+void DeviceLogger::start() { mTimer->start(); }
+
+void DeviceLogger::pullLog()
 {
-    if(!mDevice) {
+    if (!mDevice) {
         LOG_ERROR("Ivalid device");
         return;
     }
 
-    if(!mDevice->isOpened()) {
+    if (!mDevice->isOpened()) {
         return;
     }
 
+    while (true) {
+        if (!requestLog()) {
+            LOG_ERROR("Unable to send command");
+            return;
+        }
+
+        std::string buffer = mDevice->read();
+
+        if (buffer.empty()) {
+            LOG("Empty buffer");
+            return;
+        }
+
+        DeviceReport report = parseReport(buffer);
+
+        appendLog(report);
+
+        if (report.cmd == LogUnitEnd) {
+            emit logRecived(mLogBuffer);
+            mLogBuffer.clear();
+            continue;
+        }
+
+        if (report.cmd == LogEnd) {
+            mLogBuffer.clear();
+            break;
+        }
+    }
+}
+
+DeviceReport DeviceLogger::parseReport(const std::string &str) const
+{
+    nlohmann::json jreport = nlohmann::json::parse(str, nullptr, false);
+    if (jreport.empty()) {
+        return {};
+    }
+
+    DeviceReport report;
+    report.cmd = jreport.value("id", UnknownCommand);
+    report.data = jreport.value("d", "");
+
+    return report;
+}
+
+void DeviceLogger::appendLog(const DeviceReport &report)
+{
+    switch (report.cmd) {
+    case LogUnit:
+    case LogUnitEnd: mLogBuffer += report.data; break;
+    case LogEnd: mLogBuffer.clear(); break;
+    default: break;
+    }
+}
+
+bool DeviceLogger::requestLog()
+{
     nlohmann::json jsonCommand;
     jsonCommand["id"] = GetLog;
 
     std::string commandStr = jsonCommand.dump();
-    while (commandStr.size() < 64 ) {
+    while (commandStr.size() < 64) {
         commandStr.push_back(0);
     }
 
-    if (!mDevice->write(commandStr)) {
-        LOG_ERROR("Unable to send command");
-        return;
-    }
-
-    std::string buffer = mDevice->read();
-
-    if (buffer.empty()) {
-        LOG("Empty buffer");
-        return;
-    }
-
-    std::string log = parseLog(std::move(buffer));
-
-    if (!log.empty()) {
-        LOG("\n\t%s", log.c_str());
-    }
-}
-
-std::string DeviceLogger::parseLog(std::string str)
-{
-    nlohmann::json jLog = nlohmann::json::parse(str, nullptr, false);
-    if (jLog.empty()) {
-        return {};
-    }
-
-    PanelCommandId id = jLog.value("id", UnknownCommand);
-
-    switch (id) {
-    case LogUnit:
-        mLogBuffer += jLog.value("d", "");
-        break;
-    case LogUnitEnd: {
-        std::string log = mLogBuffer + jLog.value("d", "");
-        mLogBuffer.clear();
-        return log;
-    }
-    case LogEnd:
-        mLogBuffer.clear();
-        break;
-    default:
-        break;
-    }
-
-    return {};
+    return mDevice->write(commandStr);
 }

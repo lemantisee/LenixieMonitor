@@ -2,14 +2,17 @@
 
 #include "Logger.h"
 
-UsbDevice::UsbDevice()
+UsbDevice::UsbDevice(QObject *parent) : QObject(parent)
 {
-    mWatcher.onEvent(
-        [this](int vid, int pid, UsbWatcher::Event event) { onWatcherCallback(vid, pid, event); });
+    mWatcher = new UsbWatcher(this);
+    connect(mWatcher, &UsbWatcher::arrived, this, &UsbDevice::onArrived);
+    connect(mWatcher, &UsbWatcher::left, this, &UsbDevice::onLeft);
 }
 
 UsbDevice::~UsbDevice()
 {
+    mWatcher->stop();
+
     closeDevice();
 
     if (mUsbContext) {
@@ -20,13 +23,15 @@ UsbDevice::~UsbDevice()
 
 bool UsbDevice::open(uint32_t vid, uint32_t pid)
 {
+    mVid = vid;
+    mPid = pid;
     int res = libusb_init_context(&mUsbContext, nullptr, 0);
     if (res < 0 || !mUsbContext) {
         LOG_ERROR("Unable to init usb context");
         return false;
     }
 
-    if (!mWatcher.start(vid, pid)) {
+    if (!mWatcher->start(vid, pid)) {
         LOG_ERROR("Unable to start usb watcher");
         return false;
     }
@@ -36,15 +41,11 @@ bool UsbDevice::open(uint32_t vid, uint32_t pid)
 
 bool UsbDevice::isOpened() const
 {
-    std::lock_guard lock(mMutex);
-
     return mDevice != nullptr;
 }
 
 std::string UsbDevice::read()
 {
-    std::lock_guard lock(mMutex);
-
     if (!mDevice) {
         return {};
     }
@@ -68,8 +69,6 @@ std::string UsbDevice::read()
 
 bool UsbDevice::write(const std::string &data)
 {
-    std::lock_guard lock(mMutex);
-
     if (!mDevice) {
         return false;
     }
@@ -152,20 +151,20 @@ void UsbDevice::closeDevice()
     mDevice = nullptr;
 }
 
-void UsbDevice::onWatcherCallback(uint32_t vid, uint32_t pid, UsbWatcher::Event event)
+void UsbDevice::onArrived()
 {
-    std::lock_guard lock(mMutex);
-
-    switch (event) {
-    case UsbWatcher::Arrived:
-        LOG("lenixie arrived");
-        mDevice = findDevice(vid, pid);
-        openDevice(mDevice);
-        break;
-    case UsbWatcher::Left:
-        LOG("lenixie left");
-        closeDevice();
-        break;
-    default: break;
+    libusb_device *device = findDevice(mVid, mPid);
+    if(!openDevice(device)){
+        LOG_ERROR("Unable to open device");
+        return;
     }
+
+    mDevice = device;
+    emit opened();
+}
+
+void UsbDevice::onLeft()
+{
+    closeDevice();
+    emit closed();
 }
