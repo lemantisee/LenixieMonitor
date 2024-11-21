@@ -3,10 +3,11 @@
 #include <QObject>
 
 #include <string>
+#include <thread>
+#include <mutex>
+#include <queue>
 
 #include "libusb.h"
-
-#include "UsbWatcher.h"
 
 class UsbDevice : public QObject
 {
@@ -17,18 +18,21 @@ public:
 
     bool open(uint32_t vid, uint32_t pid);
     bool isOpened() const;
-
-    std::string read();
-    bool write(const std::string &data);
+    bool send(const std::string &data);
 
 signals:
     void opened();
     void closed();
+    void recieved(const std::string &msg);
 
 private:
     libusb_device *findDevice(uint32_t vid, uint32_t pid) const;
     bool openDevice(libusb_device *device);
     void closeDevice();
+    void process();
+    std::string read();
+    bool write(const std::string &data);
+    std::string popMessage();
 
     void onArrived();
     void onLeft();
@@ -36,8 +40,10 @@ private:
     libusb_context *mUsbContext = nullptr;
     libusb_device *mDevice = nullptr;
     libusb_device_handle *mHandle = nullptr;
+    std::jthread mThread;
+    std::queue<std::string> mOutMessages;
+    mutable std::mutex mMutex;
 
-    UsbWatcher *mWatcher = nullptr;
     int mPid = 0;
     int mVid = 0;
 };

@@ -15,9 +15,13 @@ DeviceLogger::DeviceLogger(UsbDevice *device, QObject *parent) : QObject(parent)
     mTimer->setInterval(std::chrono::milliseconds(50));
 
     connect(mTimer, &QTimer::timeout, this, &DeviceLogger::pullLog);
+    connect(device, &UsbDevice::recieved, this, &DeviceLogger::onReport);
 }
 
-void DeviceLogger::start() { mTimer->start(); }
+void DeviceLogger::start()
+{
+    mTimer->start();
+}
 
 void DeviceLogger::pullLog()
 {
@@ -27,36 +31,13 @@ void DeviceLogger::pullLog()
     }
 
     if (!mDevice->isOpened()) {
+        startTimer();
         return;
     }
 
-    while (true) {
-        if (!requestLog()) {
-            LOG_ERROR("Unable to send command");
-            return;
-        }
-
-        std::string buffer = mDevice->read();
-
-        if (buffer.empty()) {
-            LOG("Empty buffer");
-            return;
-        }
-
-        DeviceReport report = parseReport(buffer);
-
-        appendLog(report);
-
-        if (report.cmd == LogUnitEnd) {
-            emit logRecived(mLogBuffer);
-            mLogBuffer.clear();
-            continue;
-        }
-
-        if (report.cmd == LogEnd) {
-            mLogBuffer.clear();
-            break;
-        }
+    if (!requestLog()) {
+        LOG_ERROR("Unable to send command");
+        startTimer();
     }
 }
 
@@ -94,5 +75,40 @@ bool DeviceLogger::requestLog()
         commandStr.push_back(0);
     }
 
-    return mDevice->write(commandStr);
+    return mDevice->send(commandStr);
+}
+
+void DeviceLogger::onReport(const std::string &msg)
+{
+    if (msg.empty()) {
+        startTimer();
+        return;
+    }
+
+    DeviceReport report = parseReport(msg);
+    appendLog(report);
+
+    if (report.cmd == LogEnd) {
+        mLogBuffer.clear();
+        startTimer();
+        return;
+    }
+
+    if (report.cmd == LogUnitEnd) {
+        emit logRecived(mLogBuffer);
+        mLogBuffer.clear();
+    }
+
+    mTimer->stop();
+
+    if (!requestLog()) {
+        LOG_ERROR("Unable to send command");
+    }
+}
+
+void DeviceLogger::startTimer()
+{
+    if (!mTimer->isActive()) {
+        mTimer->start();
+    }
 }
