@@ -13,7 +13,6 @@ class DeviceLogger : public QObject
     Q_OBJECT
 public:
     DeviceLogger(UsbDevice *device, QObject *parent);
-    void start();
 
 signals:
     void logRecived(const std::string &str);
@@ -21,9 +20,11 @@ signals:
 private:
     void pullLog();
     DeviceReport parseReport(const std::string &str) const;
-    void appendLog(const DeviceReport &report);
     bool requestLog();
     void onReport(const std::string &msg);
+    void onDeviceOpened();
+    void onDeviceClosed();
+
     void startTimer();
 
     UsbDevice *mDevice = nullptr;

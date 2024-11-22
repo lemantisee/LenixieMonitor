@@ -15,12 +15,10 @@ DeviceLogger::DeviceLogger(UsbDevice *device, QObject *parent) : QObject(parent)
     mTimer->setInterval(std::chrono::milliseconds(50));
 
     connect(mTimer, &QTimer::timeout, this, &DeviceLogger::pullLog);
-    connect(device, &UsbDevice::recieved, this, &DeviceLogger::onReport);
-}
 
-void DeviceLogger::start()
-{
-    mTimer->start();
+    connect(device, &UsbDevice::opened, this, &DeviceLogger::onDeviceOpened);
+    connect(device, &UsbDevice::closed, this, &DeviceLogger::onDeviceClosed);
+    connect(device, &UsbDevice::recieved, this, &DeviceLogger::onReport);
 }
 
 void DeviceLogger::pullLog()
@@ -38,6 +36,7 @@ void DeviceLogger::pullLog()
     if (!requestLog()) {
         LOG_ERROR("Unable to send command");
         startTimer();
+        return;
     }
 }
 
@@ -55,16 +54,6 @@ DeviceReport DeviceLogger::parseReport(const std::string &str) const
     return report;
 }
 
-void DeviceLogger::appendLog(const DeviceReport &report)
-{
-    switch (report.cmd) {
-    case LogUnit:
-    case LogUnitEnd: mLogBuffer += report.data; break;
-    case LogEnd: mLogBuffer.clear(); break;
-    default: break;
-    }
-}
-
 bool DeviceLogger::requestLog()
 {
     nlohmann::json jsonCommand;
@@ -80,30 +69,41 @@ bool DeviceLogger::requestLog()
 
 void DeviceLogger::onReport(const std::string &msg)
 {
-    if (msg.empty()) {
-        startTimer();
-        return;
-    }
-
     DeviceReport report = parseReport(msg);
-    appendLog(report);
 
-    if (report.cmd == LogEnd) {
-        mLogBuffer.clear();
-        startTimer();
-        return;
-    }
-
-    if (report.cmd == LogUnitEnd) {
+    switch (report.cmd) {
+    case LogUnit:
+        mLogBuffer += report.data;
+        break;
+    case LogUnitEnd:
+        mLogBuffer += report.data;
         emit logRecived(mLogBuffer);
         mLogBuffer.clear();
+        break;
+    case LogEnd:
+        mLogBuffer.clear();
+        startTimer();
+        return;
+    default:
+        return;
     }
-
-    mTimer->stop();
 
     if (!requestLog()) {
+        startTimer();
         LOG_ERROR("Unable to send command");
     }
+}
+
+void DeviceLogger::onDeviceOpened()
+{
+    mLogBuffer.clear();
+    pullLog();
+}
+
+void DeviceLogger::onDeviceClosed()
+{
+    mTimer->stop();
+    mLogBuffer.clear();
 }
 
 void DeviceLogger::startTimer()

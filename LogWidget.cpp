@@ -23,8 +23,6 @@ LogWidget::LogWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
 
     connect(clearButton, &QPushButton::clicked, this, [this] { mTextEdit->clear(); });
     connect(devLogger, &DeviceLogger::logRecived, this, &LogWidget::onLog);
-
-    devLogger->start();
 }
 
 void LogWidget::onLog(const std::string &log)
