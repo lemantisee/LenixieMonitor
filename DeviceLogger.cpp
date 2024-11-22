@@ -2,8 +2,8 @@
 
 #include <QTimer>
 
+#include "DeviceCommand.h"
 #include "UsbDevice.h"
-#include "json.hpp"
 
 #include "Logger.h"
 
@@ -40,36 +40,15 @@ void DeviceLogger::pullLog()
     }
 }
 
-DeviceReport DeviceLogger::parseReport(const std::string &str) const
-{
-    nlohmann::json jreport = nlohmann::json::parse(str, nullptr, false);
-    if (jreport.empty()) {
-        return {};
-    }
-
-    DeviceReport report;
-    report.cmd = jreport.value("id", UnknownCommand);
-    report.data = jreport.value("d", "");
-
-    return report;
-}
-
 bool DeviceLogger::requestLog()
 {
-    nlohmann::json jsonCommand;
-    jsonCommand["id"] = GetLog;
-
-    std::string commandStr = jsonCommand.dump();
-    while (commandStr.size() < 64) {
-        commandStr.push_back(0);
-    }
-
-    return mDevice->send(commandStr);
+    DeviceReport request(GetLog);
+    return mDevice->send(request.toString());
 }
 
 void DeviceLogger::onReport(const std::string &msg)
 {
-    DeviceReport report = parseReport(msg);
+    DeviceReport report(msg);
 
     switch (report.cmd) {
     case LogUnit:

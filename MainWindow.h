@@ -2,8 +2,6 @@
 
 #include <QMainWindow>
 
-#include <QLabel>
-
 class UsbDevice;
 
 class MainWindow : public QMainWindow
@@ -13,10 +11,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
 
 private:
-    void onDeviceOpened();
-    void onDeviceClosed();
-
-    QLabel *mLabel = nullptr;
+    QWidget *buildTabWidget();
 
     UsbDevice *mUsbDevice = nullptr;
 };

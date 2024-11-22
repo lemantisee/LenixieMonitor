@@ -21,6 +21,8 @@ add_executable(${PROJECT_NAME}
     DeviceCommand.h
     MainWindow.h MainWindow.cpp
     LogWidget.h LogWidget.cpp
+    StatusPanel.h StatusPanel.cpp
+    ClockWidget.h ClockWidget.cpp
 )
 
 add_subdirectory(UsbDevice)

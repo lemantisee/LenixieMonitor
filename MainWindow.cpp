@@ -2,9 +2,13 @@
 
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QTabWidget>
 
 #include "UsbDevice.h"
+
+#include "StatusPanel.h"
 #include "LogWidget.h"
+#include "ClockWidget.h"
 
 #include "Logger.h"
 
@@ -21,19 +25,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWidget *mainWidget = new QWidget;
     QVBoxLayout *main_l = new QVBoxLayout(mainWidget);
-    mainWidget->setLayout(main_l);
-
-    mLabel = new QLabel("Not connected");
-    main_l->addWidget(mLabel);
-
-    LogWidget *logWidget = new LogWidget(mUsbDevice);
-
-    main_l->addWidget(logWidget);
-
     setCentralWidget(mainWidget);
 
-    connect(mUsbDevice, &UsbDevice::opened, this, &MainWindow::onDeviceOpened);
-    connect(mUsbDevice, &UsbDevice::closed, this, &MainWindow::onDeviceClosed);
+    StatusPanel *statusWidget = new StatusPanel(mUsbDevice);
+    main_l->addWidget(statusWidget);
+
+    main_l->addWidget(buildTabWidget());
 
     if (!mUsbDevice->open(vendorId, productId)) {
         LOG_ERROR("Unable to open device");
@@ -44,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent)
     show();
 }
 
-void MainWindow::onDeviceOpened()
+QWidget *MainWindow::buildTabWidget()
 {
-    mLabel->setText("Connected");
-}
+    QTabWidget *tabWidget = new QTabWidget;
 
-void MainWindow::onDeviceClosed()
-{
-    mLabel->setText("Not connected");
+    tabWidget->addTab(new ClockWidget(mUsbDevice), tr("Clock"));
+    tabWidget->addTab(new LogWidget(mUsbDevice), tr("Logs"));
+
+    return tabWidget;
 }

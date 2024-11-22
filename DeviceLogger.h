@@ -4,8 +4,6 @@
 
 #include <string>
 
-#include "DeviceCommand.h"
-
 class UsbDevice;
 
 class DeviceLogger : public QObject
@@ -19,7 +17,6 @@ signals:
 
 private:
     void pullLog();
-    DeviceReport parseReport(const std::string &str) const;
     bool requestLog();
     void onReport(const std::string &msg);
     void onDeviceOpened();
