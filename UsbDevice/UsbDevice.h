@@ -9,6 +9,8 @@
 
 #include "libusb.h"
 
+class DataPacket;
+
 class UsbDevice : public QObject
 {
     Q_OBJECT
@@ -30,9 +32,10 @@ private:
     bool openDevice(libusb_device *device);
     void closeDevice();
     void process();
-    std::string read();
-    bool write(const std::string &data);
+    std::vector<uint8_t> read() const;
+    bool write(DataPacket packet);
     std::string popMessage();
+    void readSession();
 
     void onArrived();
     void onLeft();
@@ -42,6 +45,7 @@ private:
     libusb_device_handle *mHandle = nullptr;
     std::jthread mThread;
     std::queue<std::string> mOutMessages;
+    std::string mInMessage;
     mutable std::mutex mMutex;
 
     int mPid = 0;

@@ -15,7 +15,7 @@ ClockWidget::ClockWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
     mDevice = device;
 
     mUpdateTimer = new QTimer(this);
-    mUpdateTimer->setInterval(std::chrono::seconds(1));
+    mUpdateTimer->setInterval(std::chrono::milliseconds(500));
 
     QVBoxLayout *main_l = new QVBoxLayout(this);
 

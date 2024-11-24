@@ -48,16 +48,13 @@ bool DeviceLogger::requestLog()
 
 void DeviceLogger::onReport(const std::string &msg)
 {
+    LOG("%s", msg.c_str());
+
     DeviceReport report(msg);
 
     switch (report.cmd) {
     case LogUnit:
-        mLogBuffer += report.data;
-        break;
-    case LogUnitEnd:
-        mLogBuffer += report.data;
-        emit logRecived(mLogBuffer);
-        mLogBuffer.clear();
+        emit logRecived(report.data);
         break;
     case LogEnd:
         mLogBuffer.clear();

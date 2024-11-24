@@ -1,5 +1,7 @@
 #include "UsbDevice.h"
 
+#include "DataPacket.h"
+
 #include "Logger.h"
 
 UsbDevice::UsbDevice(QObject *parent) : QObject(parent)
@@ -55,13 +57,13 @@ bool UsbDevice::send(const std::string &data)
     return true;
 }
 
-std::string UsbDevice::read()
+std::vector<uint8_t> UsbDevice::read() const
 {
-    std::string buffer;
+    std::vector<uint8_t> buffer;
     buffer.resize(64);
 
-    int res = libusb_interrupt_transfer(mHandle, 0x81, (unsigned char *)buffer.data(),
-                                        int(buffer.size()), nullptr, 100);
+    int res = libusb_interrupt_transfer(mHandle, 0x81, buffer.data(), int(buffer.size()), nullptr,
+                                        50);
 
     switch (res) {
     case LIBUSB_ERROR_TIMEOUT: return {};
@@ -87,10 +89,48 @@ std::string UsbDevice::popMessage()
     return msg;
 }
 
-bool UsbDevice::write(const std::string &data)
+void UsbDevice::readSession()
 {
-    int res = libusb_interrupt_transfer(mHandle, 0x01, (unsigned char *)data.data(),
-                                        int(data.size()), nullptr, 100);
+    bool finished = false;
+
+    while (!finished) {
+        if(!write(DataPacket::ackPacket())){
+            LOG("unable to send ack");
+        }
+
+        std::vector<uint8_t> report = read();
+        if (report.empty()) {
+            return;
+        }
+
+        DataPacket packet = DataPacket::fromReport(report);
+
+        switch (packet.getType()) {
+        case DataPacket::PacketPayload:
+            LOG("Payload: %s", packet.getPayload().c_str());
+            mInMessage += packet.getPayload();
+            break;
+        case DataPacket::EndPacket:
+            LOG("End payload: %s", packet.getPayload().c_str());
+            mInMessage += packet.getPayload();
+            LOG("Total msg: %s", mInMessage.c_str());
+            emit recieved(mInMessage);
+            mInMessage.clear();
+            finished = true;
+            break;
+        case DataPacket::PacketAck:
+            LOG("Receive Ack");
+        default: finished = true; break;
+        }
+    }
+}
+
+bool UsbDevice::write(DataPacket packet)
+{
+    // yes, I copy there packet because libusb wants uint8_t* but const uint8_t*
+    // and I don't want to make const_cast, DataPacket::data can't be const to return uint8_t*
+    int res = libusb_interrupt_transfer(mHandle, 0x01, packet.data(), int(packet.size()), nullptr,
+                                        100);
     switch (res) {
     case LIBUSB_ERROR_TIMEOUT: return false;
     case LIBUSB_SUCCESS: return true;
@@ -187,14 +227,12 @@ void UsbDevice::process()
 
         std::string outMsg = popMessage();
         if (!outMsg.empty()) {
-            write(outMsg);
+            for (const DataPacket &packet : DataPacket::fromString(outMsg)) {
+                write(packet);
+            }
         }
 
-        std::string inMsg = read();
-
-        if (!inMsg.empty()) {
-            emit recieved(inMsg);
-        }
+        readSession();
     }
 }
 
