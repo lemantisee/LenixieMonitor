@@ -4,8 +4,6 @@
 
 #include "json.hpp"
 
-#include "Logger.h"
-
 enum PanelCommandId {
     UnknownCommand = 0,
     GetDateTime = 1,
@@ -23,16 +21,10 @@ public:
     DeviceReport(const std::string &report)
     {
         mJsonReport = nlohmann::json::parse(report, nullptr, false);
-        if (mJsonReport.empty()) {
-            return;
-        }
-
-        mCmd = mJsonReport.value("id", UnknownCommand);
     }
 
     DeviceReport(PanelCommandId cmd)
     {
-        mCmd = cmd;
         mJsonReport["id"] = cmd;
     }
 
@@ -50,9 +42,8 @@ public:
         mJsonReport[key] = value;
     }
 
-    PanelCommandId getCmd() const { return mCmd; }
+    PanelCommandId getCmd() const { return mJsonReport.value("id", UnknownCommand); }
 
 private:
-    PanelCommandId mCmd = UnknownCommand;
     nlohmann::json mJsonReport;
 };

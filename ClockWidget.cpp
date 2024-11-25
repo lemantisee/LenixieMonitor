@@ -91,50 +91,34 @@ void ClockWidget::onDateTime(const DeviceReport &report)
 void ClockWidget::onSetDateTime()
 {
     QDateTime dateTime = mDateEdit->dateTime();
-    QString dateStr = QString::number(dateTime.date().year());
-    dateStr += QString::asprintf("%02i", dateTime.date().month() - 1);
-    dateStr += QString::asprintf("%02i", dateTime.date().day());
-    dateStr += QString::asprintf("%i", dateTime.date().dayOfWeek());
-
-    dateStr += QString::asprintf("%02i", dateTime.time().hour());
-    dateStr += QString::asprintf("%02i", dateTime.time().minute());
-    dateStr += QString::asprintf("%02i", dateTime.time().second());
 
     DeviceReport report(SetDateTime);
-    report.set("d", dateStr.toStdString());
+    report.set("y", dateTime.date().year());
+    report.set("mn", dateTime.date().month() - 1);
+    report.set("md", dateTime.date().day());
+    report.set("w", dateTime.date().dayOfWeek());
+
+    report.set("h", dateTime.time().hour());
+    report.set("m", dateTime.time().minute());
+    report.set("s", dateTime.time().second());
 
     mDevice->send(report.toString());
 }
 
 QString ClockWidget::getTimeString(const DeviceReport &report) const
 {
-    const std::string data = report.get("d", std::string());
+    const int hours = report.get("h", 0);
+    const int minutes = report.get("m", 0);
+    const int seconds = report.get("s", 0);
 
-    if (data.size() < 14) {
-        return {};
-    }
-
-    const QString hours = QString::fromStdString(std::string(data.begin() + 8, data.begin() + 10));
-    const QString min = QString::fromStdString(std::string(data.begin() + 10, data.begin() + 12));
-    const QString sec = QString::fromStdString(std::string(data.begin() + 12, data.begin() + 14));
-
-    QTime time(hours.toInt(), min.toInt(), sec.toInt());
-
-    return time.toString();
+    return QTime(hours, minutes, seconds).toString();
 }
 
 QString ClockWidget::getDateString(const DeviceReport &report) const
 {
-    const std::string data = report.get("d", std::string());
+    const int year = report.get("y", 0);
+    const int month = report.get("mn", 0) + 1;
+    const int monthDay = report.get("md", 0);
 
-    if (data.size() < 14) {
-        return {};
-    }
-
-    const QString year = QString::fromStdString(std::string(data.begin(), data.begin() + 4));
-    const QString month = QString::fromStdString(std::string(data.begin() + 4, data.begin() + 6));
-    const QString day = QString::fromStdString(std::string(data.begin() + 6, data.begin() + 8));
-
-    QDate date(year.toInt(), month.toInt() + 1, day.toInt());
-    return date.toString(Qt::RFC2822Date);
+    return QDate(year, month, monthDay).toString(Qt::RFC2822Date);
 }
