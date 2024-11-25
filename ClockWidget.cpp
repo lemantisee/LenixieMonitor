@@ -19,12 +19,8 @@ ClockWidget::ClockWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
 
     QVBoxLayout *main_l = new QVBoxLayout(this);
 
-    QHBoxLayout *dateWrapper_l = new QHBoxLayout;
-    main_l->addLayout(dateWrapper_l);
-    main_l->addStretch();
-
     QFormLayout *dateState_l = new QFormLayout;
-    dateWrapper_l->addLayout(dateState_l);
+    main_l->addLayout(dateState_l);
     mTimeLabel = new QLabel(tr("Unknown"));
     dateState_l->addRow(tr("Time:"), mTimeLabel);
 
@@ -32,8 +28,8 @@ ClockWidget::ClockWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
     dateState_l->addRow(tr("Date:"), mDateLabel);
 
     QHBoxLayout *setDate_l = new QHBoxLayout;
-    dateWrapper_l->addLayout(setDate_l);
-    dateWrapper_l->addStretch();
+    main_l->addLayout(setDate_l);
+    main_l->addStretch();
 
     mDateEdit = new QDateTimeEdit;
     mDateEdit->setCalendarPopup(true);
