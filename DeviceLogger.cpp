@@ -52,9 +52,9 @@ void DeviceLogger::onReport(const std::string &msg)
 
     DeviceReport report(msg);
 
-    switch (report.cmd) {
+    switch (report.getCmd()) {
     case LogUnit:
-        emit logRecived(report.data);
+        emit logRecived(report.get("d", std::string()));
         break;
     case LogEnd:
         mLogBuffer.clear();

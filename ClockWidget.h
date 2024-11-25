@@ -7,6 +7,7 @@
 #include <QDateTimeEdit>
 
 class UsbDevice;
+class DeviceReport;
 
 class ClockWidget : public QWidget
 {
@@ -20,11 +21,11 @@ private:
     void onDeviceOpened();
     void onDeviceClosed();
     void onReport(const std::string &msg);
-    void onDateTime(const std::string &data);
+    void onDateTime(const DeviceReport &report);
     void onSetDateTime();
 
-    QString getTimeString(const std::string &data) const;
-    QString getDateString(const std::string &data) const;
+    QString getTimeString(const DeviceReport &report) const;
+    QString getDateString(const DeviceReport &report) const;
 
     QLabel *mTimeLabel = nullptr;
     QLabel *mDateLabel = nullptr;

@@ -22,43 +22,37 @@ public:
     DeviceReport() = default;
     DeviceReport(const std::string &report)
     {
-        nlohmann::json jreport = nlohmann::json::parse(report, nullptr, false);
-        if (jreport.empty()) {
+        mJsonReport = nlohmann::json::parse(report, nullptr, false);
+        if (mJsonReport.empty()) {
             return;
         }
 
-        cmd = jreport.value("id", UnknownCommand);
-        data = jreport.value("d", "");
+        mCmd = mJsonReport.value("id", UnknownCommand);
     }
 
-    DeviceReport(PanelCommandId cmd_) { cmd = cmd_; }
-    DeviceReport(PanelCommandId cmd_, std::string str)
+    DeviceReport(PanelCommandId cmd)
     {
-        cmd = cmd_;
-        data = std::move(str);
+        mCmd = cmd;
+        mJsonReport["id"] = cmd;
     }
 
-    std::string toString() const
+    std::string toString() const { return mJsonReport.dump(); }
+
+    template<typename T>
+    T get(std::string_view key, T defaultValue) const
     {
-        nlohmann::json jsonCommand;
-        jsonCommand["id"] = cmd;
-        if (!data.empty()) {
-            jsonCommand["d"] = data;
-        }
-
-        std::string commandStr = jsonCommand.dump();
-        if (commandStr.size() > 64) {
-            LOG_ERROR("To big data payload");
-            return {};
-        }
-
-        while (commandStr.size() < 64) {
-            commandStr.push_back(0);
-        }
-
-        return commandStr;
+        return mJsonReport.value(key, T());
     }
 
-    PanelCommandId cmd = UnknownCommand;
-    std::string data;
+    template<typename T>
+    void set(std::string_view key, T value)
+    {
+        mJsonReport[key] = value;
+    }
+
+    PanelCommandId getCmd() const { return mCmd; }
+
+private:
+    PanelCommandId mCmd = UnknownCommand;
+    nlohmann::json mJsonReport;
 };

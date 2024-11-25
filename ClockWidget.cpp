@@ -34,6 +34,7 @@ ClockWidget::ClockWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
     mDateEdit = new QDateTimeEdit;
     mDateEdit->setCalendarPopup(true);
     mDateEdit->setDateTime(QDateTime::currentDateTime());
+    mDateEdit->setMinimumWidth(120);
 
     QPushButton *setDateButton = new QPushButton(tr("Set"));
     setDate_l->addWidget(mDateEdit);
@@ -76,18 +77,15 @@ void ClockWidget::onReport(const std::string &msg)
 {
     DeviceReport report(msg);
 
-    switch (report.cmd) {
-    case DateTimeState: onDateTime(report.data); break;
+    switch (report.getCmd()) {
+    case DateTimeState: onDateTime(report); break;
     default: break;
     }
 }
 
-void ClockWidget::onDateTime(const std::string &data)
+void ClockWidget::onDateTime(const DeviceReport &report)
 {
-    if (data.size() >= 14) {
-        mTimeLabel->setText(getTimeString(data));
-        mDateLabel->setText(getDateString(data));
-    }
+    mTimeLabel->setText(getDateString(report) + " " + getTimeString(report));
 }
 
 void ClockWidget::onSetDateTime()
@@ -102,12 +100,20 @@ void ClockWidget::onSetDateTime()
     dateStr += QString::asprintf("%02i", dateTime.time().minute());
     dateStr += QString::asprintf("%02i", dateTime.time().second());
 
-    DeviceReport report(SetDateTime, dateStr.toStdString());
+    DeviceReport report(SetDateTime);
+    report.set("d", dateStr.toStdString());
+
     mDevice->send(report.toString());
 }
 
-QString ClockWidget::getTimeString(const std::string &data) const
+QString ClockWidget::getTimeString(const DeviceReport &report) const
 {
+    const std::string data = report.get("d", std::string());
+
+    if (data.size() < 14) {
+        return {};
+    }
+
     const QString hours = QString::fromStdString(std::string(data.begin() + 8, data.begin() + 10));
     const QString min = QString::fromStdString(std::string(data.begin() + 10, data.begin() + 12));
     const QString sec = QString::fromStdString(std::string(data.begin() + 12, data.begin() + 14));
@@ -117,12 +123,18 @@ QString ClockWidget::getTimeString(const std::string &data) const
     return time.toString();
 }
 
-QString ClockWidget::getDateString(const std::string &data) const
+QString ClockWidget::getDateString(const DeviceReport &report) const
 {
+    const std::string data = report.get("d", std::string());
+
+    if (data.size() < 14) {
+        return {};
+    }
+
     const QString year = QString::fromStdString(std::string(data.begin(), data.begin() + 4));
     const QString month = QString::fromStdString(std::string(data.begin() + 4, data.begin() + 6));
     const QString day = QString::fromStdString(std::string(data.begin() + 6, data.begin() + 8));
 
     QDate date(year.toInt(), month.toInt() + 1, day.toInt());
-    return date.toString();
+    return date.toString(Qt::RFC2822Date);
 }
