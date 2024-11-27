@@ -56,7 +56,7 @@ bool ClockWidget::requestDateTime()
         return true;
     }
 
-    DeviceReport report(GetDateTime);
+    DeviceReport report(DeviceReport::GetDateTime);
     return mDevice->send(report.toString());
 }
 
@@ -78,7 +78,7 @@ void ClockWidget::onReport(const std::string &msg)
     DeviceReport report(msg);
 
     switch (report.getCmd()) {
-    case DateTimeState: onDateTime(report); break;
+    case DeviceReport::DateTimeState: onDateTime(report); break;
     default: break;
     }
 }
@@ -92,7 +92,7 @@ void ClockWidget::onSetDateTime()
 {
     QDateTime dateTime = mDateEdit->dateTime();
 
-    DeviceReport report(SetDateTime);
+    DeviceReport report(DeviceReport::SetDateTime);
     report.set("y", dateTime.date().year());
     report.set("mn", dateTime.date().month() - 1);
     report.set("md", dateTime.date().day());

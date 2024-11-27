@@ -17,14 +17,10 @@ signals:
 
 private:
     void pullLog();
-    bool requestLog();
     void onReport(const std::string &msg);
     void onDeviceOpened();
     void onDeviceClosed();
 
-    void startTimer();
-
     UsbDevice *mDevice = nullptr;
     QTimer *mTimer = nullptr;
-    std::string mLogBuffer;
 };

@@ -3,12 +3,14 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QTabWidget>
+#include <QSplitter>
 
 #include "UsbDevice.h"
 
 #include "StatusPanel.h"
 #include "LogWidget.h"
 #include "ClockWidget.h"
+#include "NetworkWidget.h"
 
 #include "Logger.h"
 
@@ -30,7 +32,11 @@ MainWindow::MainWindow(QWidget *parent)
     StatusPanel *statusWidget = new StatusPanel(mUsbDevice);
     main_l->addWidget(statusWidget);
 
-    main_l->addWidget(buildTabWidget());
+    QSplitter *splitter = new QSplitter(Qt::Vertical);
+    splitter->addWidget(buildTabWidget());
+    splitter->addWidget(new LogWidget(mUsbDevice));
+
+    main_l->addWidget(splitter);
 
     if (!mUsbDevice->open(vendorId, productId)) {
         LOG_ERROR("Unable to open device");
@@ -46,7 +52,7 @@ QWidget *MainWindow::buildTabWidget()
     QTabWidget *tabWidget = new QTabWidget;
 
     tabWidget->addTab(new ClockWidget(mUsbDevice), tr("Clock"));
-    tabWidget->addTab(new LogWidget(mUsbDevice), tr("Logs"));
+    tabWidget->addTab(new NetworkWidget(mUsbDevice), tr("Network"));
 
     return tabWidget;
 }

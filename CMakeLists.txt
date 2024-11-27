@@ -24,6 +24,7 @@ add_executable(${PROJECT_NAME}
     StatusPanel.h StatusPanel.cpp
     ClockWidget.h ClockWidget.cpp
     UsbDevice/DataPacket.h UsbDevice/DataPacket.cpp
+    NetworkWidget.h NetworkWidget.cpp
 )
 
 add_subdirectory(UsbDevice)

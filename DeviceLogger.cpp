@@ -29,62 +29,34 @@ void DeviceLogger::pullLog()
     }
 
     if (!mDevice->isOpened()) {
-        startTimer();
         return;
     }
 
-    if (!requestLog()) {
+    DeviceReport request(DeviceReport::GetLog);
+    if (!mDevice->send(request.toString())) {
         LOG_ERROR("Unable to send command");
-        startTimer();
-        return;
     }
-}
-
-bool DeviceLogger::requestLog()
-{
-    DeviceReport request(GetLog);
-    return mDevice->send(request.toString());
 }
 
 void DeviceLogger::onReport(const std::string &msg)
 {
-    LOG("%s", msg.c_str());
-
     DeviceReport report(msg);
 
     switch (report.getCmd()) {
-    case LogUnit:
+    case DeviceReport::LogUnit:
         emit logRecived(report.get("d", std::string()));
         break;
-    case LogEnd:
-        mLogBuffer.clear();
-        startTimer();
-        return;
     default:
-        return;
-    }
-
-    if (!requestLog()) {
-        startTimer();
-        LOG_ERROR("Unable to send command");
+        break;
     }
 }
 
 void DeviceLogger::onDeviceOpened()
 {
-    mLogBuffer.clear();
-    pullLog();
+    mTimer->start();
 }
 
 void DeviceLogger::onDeviceClosed()
 {
     mTimer->stop();
-    mLogBuffer.clear();
-}
-
-void DeviceLogger::startTimer()
-{
-    if (!mTimer->isActive()) {
-        mTimer->start();
-    }
 }
