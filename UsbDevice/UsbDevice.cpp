@@ -107,13 +107,10 @@ void UsbDevice::readSession()
 
         switch (packet.getType()) {
         case DataPacket::PacketPayload:
-            LOG("Payload: %s", packet.getPayload().c_str());
             mInMessage += packet.getPayload();
             break;
         case DataPacket::EndPacket:
-            LOG("End payload: %s", packet.getPayload().c_str());
             mInMessage += packet.getPayload();
-            LOG("Total msg: %s", mInMessage.c_str());
             emit recieved(mInMessage);
             mInMessage.clear();
             finished = true;

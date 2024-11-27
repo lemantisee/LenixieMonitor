@@ -18,13 +18,14 @@ add_executable(${PROJECT_NAME}
     json/json.hpp
     DeviceLogger.h DeviceLogger.cpp
     Logger.h
-    DeviceCommand.h
+    DeviceReport.h
     MainWindow.h MainWindow.cpp
     LogWidget.h LogWidget.cpp
     StatusPanel.h StatusPanel.cpp
     ClockWidget.h ClockWidget.cpp
     UsbDevice/DataPacket.h UsbDevice/DataPacket.cpp
     NetworkWidget.h NetworkWidget.cpp
+    NtpWidget.h NtpWidget.cpp
 )
 
 add_subdirectory(UsbDevice)

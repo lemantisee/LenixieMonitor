@@ -18,6 +18,11 @@ public:
         GetNetworkState = 8,
         NetworkState = 9,
         ConnectToWifi = 10,
+        SetTimezone = 11,
+        SetNtpServer = 12,
+        SyncNtpTime = 13,
+        GetNtpState = 14,
+        NtpState = 15,
     };
 
     DeviceReport() = default;

@@ -6,7 +6,7 @@
 #include <QDateTimeEdit>
 #include <QPushButton>
 
-#include "DeviceCommand.h"
+#include "DeviceReport.h"
 #include "UsbDevice.h"
 
 

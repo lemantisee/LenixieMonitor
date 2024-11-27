@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QMessageBox>
 
-#include "DeviceCommand.h"
+#include "DeviceReport.h"
 
 NetworkWidget::NetworkWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
 {

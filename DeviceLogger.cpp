@@ -2,7 +2,7 @@
 
 #include <QTimer>
 
-#include "DeviceCommand.h"
+#include "DeviceReport.h"
 #include "UsbDevice.h"
 
 #include "Logger.h"
