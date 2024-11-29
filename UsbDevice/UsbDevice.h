@@ -32,7 +32,7 @@ private:
     bool openDevice(libusb_device *device);
     void closeDevice();
     void process();
-    std::vector<uint8_t> read() const;
+    std::optional<std::vector<uint8_t>> read() const;
     bool write(DataPacket packet);
     std::string popMessage();
     void readSession();

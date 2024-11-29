@@ -4,6 +4,7 @@
 
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 
 class UsbDevice;
 class DeviceReport;
@@ -26,6 +27,9 @@ private:
     QLabel *mStatusLabel = nullptr;
     QLineEdit *mSsidEdit = nullptr;
     QLineEdit *mPassEdit = nullptr;
+    QPushButton *mConnectButton = nullptr;
     QTimer *mUpdateTimer = nullptr;
     UsbDevice *mDevice = nullptr;
+
+    bool mConnecting = false;
 };

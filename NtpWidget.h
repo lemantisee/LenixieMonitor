@@ -15,7 +15,6 @@ public:
 
 private:
     void onDeviceOpened();
-    void onDeviceClosed();
     void onReport(const std::string &msg);
     void onTimezoneChanged(int timezone);
     void setServer();

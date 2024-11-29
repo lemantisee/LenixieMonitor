@@ -28,20 +28,20 @@ NetworkWidget::NetworkWidget(UsbDevice *device, QWidget *parent) : QWidget{paren
     formWrapper_l->addLayout(form_l);
     formWrapper_l->addStretch();
 
-    QPushButton *connectButton = new QPushButton(tr("Connect"));
+    mConnectButton = new QPushButton(tr("Connect"));
     mStatusLabel = new QLabel(tr("Unknown"));
     mSsidEdit = new QLineEdit;
     mPassEdit = new QLineEdit;
     form_l->addRow(tr("Status:"), mStatusLabel);
     form_l->addRow(tr("SSID:"), mSsidEdit);
     form_l->addRow(tr("Password:"), mPassEdit);
-    form_l->addRow(connectButton);
+    form_l->addRow(mConnectButton);
 
     connect(mDevice, &UsbDevice::opened, this, &NetworkWidget::onDeviceOpened);
     connect(mDevice, &UsbDevice::closed, this, &NetworkWidget::onDeviceClosed);
     connect(mDevice, &UsbDevice::recieved, this, &NetworkWidget::onReport);
 
-    connect(connectButton, &QPushButton::clicked, this, &NetworkWidget::onConnectClicked);
+    connect(mConnectButton, &QPushButton::clicked, this, &NetworkWidget::onConnectClicked);
 
     connect(mUpdateTimer, &QTimer::timeout, this, &NetworkWidget::requestStatus);
 }
@@ -88,6 +88,13 @@ void NetworkWidget::onConnectClicked()
     report.set("s", ssid.toStdString());
     report.set("p", pass.toStdString());
     mDevice->send(report.toString());
+
+    mStatusLabel->setText(tr("Connecting..."));
+    mSsidEdit->setEnabled(false);
+    mPassEdit->setEnabled(false);
+    mConnectButton->setEnabled(false);
+
+    mConnecting = true;
 }
 
 void NetworkWidget::onState(const DeviceReport &report)
@@ -105,6 +112,13 @@ void NetworkWidget::onState(const DeviceReport &report)
     }
 
     mStatusLabel->setText(statusStr);
+
+    if (mConnecting) {
+        mConnecting = false;
+        mSsidEdit->setEnabled(true);
+        mPassEdit->setEnabled(true);
+        mConnectButton->setEnabled(true);
+    }
 }
 
 void NetworkWidget::requestStatus()

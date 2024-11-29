@@ -57,7 +57,7 @@ bool UsbDevice::send(const std::string &data)
     return true;
 }
 
-std::vector<uint8_t> UsbDevice::read() const
+std::optional<std::vector<uint8_t>> UsbDevice::read() const
 {
     std::vector<uint8_t> buffer;
     buffer.resize(64);
@@ -66,14 +66,14 @@ std::vector<uint8_t> UsbDevice::read() const
                                         50);
 
     switch (res) {
-    case LIBUSB_ERROR_TIMEOUT: return {};
+    case LIBUSB_ERROR_TIMEOUT: return std::vector<uint8_t>();
     case LIBUSB_SUCCESS: return buffer;
     default: break;
     }
 
     LOG_ERROR("Unable to recieve data. Code %i. %s", res, libusb_strerror(res));
 
-    return {};
+    return std::nullopt;
 }
 
 std::string UsbDevice::popMessage()
@@ -98,9 +98,13 @@ void UsbDevice::readSession()
             LOG("unable to send ack");
         }
 
-        std::vector<uint8_t> report = read();
-        if (report.empty()) {
+        auto reportOpt = read();
+        if (!reportOpt) {
             return;
+        }
+        const std::vector<uint8_t> report = *reportOpt;
+        if (report.empty()) {
+            continue;
         }
 
         DataPacket packet = DataPacket::fromReport(report);
@@ -227,9 +231,10 @@ void UsbDevice::process()
             for (const DataPacket &packet : DataPacket::fromString(outMsg)) {
                 write(packet);
             }
+
+            readSession();
         }
 
-        readSession();
     }
 }
 

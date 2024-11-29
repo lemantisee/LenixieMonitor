@@ -50,7 +50,6 @@ NtpWidget::NtpWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
 
 
     connect(mDevice, &UsbDevice::opened, this, &NtpWidget::onDeviceOpened);
-    connect(mDevice, &UsbDevice::closed, this, &NtpWidget::onDeviceClosed);
     connect(mDevice, &UsbDevice::recieved, this, &NtpWidget::onReport);
 
     connect(mTimeZoneEdit, &QSpinBox::valueChanged, this, &NtpWidget::onTimezoneChanged);
@@ -62,11 +61,6 @@ NtpWidget::NtpWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
 void NtpWidget::onDeviceOpened()
 {
     mDevice->send(DeviceReport(DeviceReport::GetNtpState).toString());
-}
-
-void NtpWidget::onDeviceClosed()
-{
-
 }
 
 void NtpWidget::onReport(const std::string &msg)
