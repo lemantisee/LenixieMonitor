@@ -28,7 +28,6 @@ private:
     QString getDateString(const DeviceReport &report) const;
 
     QLabel *mTimeLabel = nullptr;
-    QLabel *mDateLabel = nullptr;
     QDateTimeEdit *mDateEdit = nullptr;
 
     QTimer *mUpdateTimer = nullptr;

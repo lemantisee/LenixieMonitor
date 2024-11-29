@@ -24,9 +24,6 @@ ClockWidget::ClockWidget(UsbDevice *device, QWidget *parent) : QWidget{parent}
     mTimeLabel = new QLabel(tr("Unknown"));
     dateState_l->addRow(tr("Time:"), mTimeLabel);
 
-    mDateLabel = new QLabel(tr("Unknown"));
-    dateState_l->addRow(tr("Date:"), mDateLabel);
-
     QHBoxLayout *setDate_l = new QHBoxLayout;
     main_l->addLayout(setDate_l);
     main_l->addStretch();
@@ -70,7 +67,6 @@ void ClockWidget::onDeviceClosed()
 {
     mUpdateTimer->stop();
     mTimeLabel->setText(tr("Unknown"));
-    mDateLabel->setText(tr("Unknown"));
 }
 
 void ClockWidget::onReport(const std::string &msg)
