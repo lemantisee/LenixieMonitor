@@ -24,8 +24,10 @@ add_executable(${PROJECT_NAME}
     StatusPanel.h StatusPanel.cpp
     ClockWidget.h ClockWidget.cpp
     UsbDevice/DataPacket.h UsbDevice/DataPacket.cpp
-    NetworkWidget.h NetworkWidget.cpp
     NtpWidget.h NtpWidget.cpp
+
+    NetworkWidget/NetworkWidget.h NetworkWidget/NetworkWidget.cpp
+    NetworkWidget/ConnectDialog.h NetworkWidget/ConnectDialog.cpp
 )
 
 add_subdirectory(UsbDevice)
@@ -34,6 +36,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/libusb
     ${CMAKE_CURRENT_SOURCE_DIR}/json
+    ${CMAKE_CURRENT_SOURCE_DIR}/NetworkWidget
 )
 
 target_link_libraries(${PROJECT_NAME}

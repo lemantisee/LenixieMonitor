@@ -4,7 +4,7 @@
 
 #include <QLabel>
 #include <QLineEdit>
-#include <QPushButton>
+#include <QToolButton>
 
 class UsbDevice;
 class DeviceReport;
@@ -19,17 +19,21 @@ private:
     void onDeviceOpened();
     void onDeviceClosed();
     void onReport(const std::string &msg);
-    void onConnectClicked();
+    void onConnectAction();
+    void onConnectLastAction();
+    void onDisconnectAction();
+    void onForgetAction();
     void onState(const DeviceReport &report);
 
     void requestStatus();
 
+    QAction *mConnectAction = nullptr;
+    QAction *mConnectToLastAction = nullptr;
+    QAction *mDisconnectAction = nullptr;
+    QAction *mForgetAction = nullptr;
+
     QLabel *mStatusLabel = nullptr;
-    QLineEdit *mSsidEdit = nullptr;
-    QLineEdit *mPassEdit = nullptr;
-    QPushButton *mConnectButton = nullptr;
+    QToolButton *mMenuButton = nullptr;
     QTimer *mUpdateTimer = nullptr;
     UsbDevice *mDevice = nullptr;
-
-    bool mConnecting = false;
 };
