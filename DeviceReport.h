@@ -25,6 +25,8 @@ public:
         SyncNtpTime = 14,
         GetNtpState = 15,
         NtpState = 16,
+        GetVersion = 17,
+        VersionInfo = 18,
 
         MessageAck = 50,
     };
