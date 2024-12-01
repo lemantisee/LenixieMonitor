@@ -19,4 +19,6 @@ private:
     UsbDevice *mDevice = nullptr;
     QLabel *mStatusLabel = nullptr;
     QLabel *mFirmwareVersionLabel = nullptr;
+    QLabel *mAtVersion = nullptr;
+    QLabel *mSdkVersion = nullptr;
 };

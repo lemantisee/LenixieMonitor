@@ -5,23 +5,41 @@
 
 #include "UsbDevice.h"
 #include "DeviceReport.h"
+#include "Logger.h"
 
 StatusPanel::StatusPanel(UsbDevice *device, QWidget *parent) : QWidget{parent}
 {
     mDevice = device;
 
-    QHBoxLayout *main_l = new QHBoxLayout(this);
+    mFirmwareVersionLabel = new QLabel;
+    mAtVersion = new QLabel;
+    mSdkVersion = new QLabel;
 
-    mFirmwareVersionLabel = new QLabel();
+    QVBoxLayout *ver_l = new QVBoxLayout;
+    ver_l->setContentsMargins({});
+    ver_l->addWidget(mFirmwareVersionLabel);
+    ver_l->addWidget(mAtVersion);
+    ver_l->addWidget(mSdkVersion);
+    ver_l->addStretch();
+
     mStatusLabel = new QLabel(tr("Disconnected"));
-    main_l->addWidget(mStatusLabel);
+
+    QVBoxLayout *stat_l = new QVBoxLayout;
+    stat_l->setContentsMargins({});
+    stat_l->addWidget(mStatusLabel);
+    stat_l->addStretch();
+
+    QHBoxLayout *main_l = new QHBoxLayout(this);
+    main_l->addLayout(stat_l);
     main_l->addStretch();
-    main_l->addWidget(mFirmwareVersionLabel);
+    main_l->addLayout(ver_l);
 
     connect(device, &UsbDevice::opened, this, &StatusPanel::onOpen);
     connect(device, &UsbDevice::closed, this, [this] {
         mStatusLabel->setText(tr("Disconnected"));
-        mFirmwareVersionLabel->clear();
+        mFirmwareVersionLabel->hide();
+        mAtVersion->hide();
+        mSdkVersion->hide();
     });
     connect(device, &UsbDevice::recieved, this, &StatusPanel::onReport);
 }
@@ -43,7 +61,20 @@ void StatusPanel::onReport(const std::string &msg)
     }
 
     std::string version = report.get("f", std::string());
-    QString versionStr = "Firmware ver: " + QString::fromStdString(version);
+    QString versionStr = tr("Firmware ver: ") + QString::fromStdString(version);
 
+    mFirmwareVersionLabel->show();
     mFirmwareVersionLabel->setText(versionStr);
+
+    std::string atVersion = report.get("at", std::string());
+    atVersion = atVersion.empty() ? "unknown" : atVersion;
+    QString atVersionStr = tr("ESP AT ver: ") + QString::fromStdString(atVersion);
+    mAtVersion->show();
+    mAtVersion->setText(atVersionStr);
+
+    std::string sdkVersion = report.get("sdk", std::string());
+    sdkVersion = sdkVersion.empty() ? "unknown" : sdkVersion;
+    QString sdkVersionStr = tr("ESP SDK ver: ") + QString::fromStdString(sdkVersion);
+    mSdkVersion->show();
+    mSdkVersion->setText(sdkVersionStr);
 }
