@@ -27,6 +27,10 @@ public:
         NtpState = 16,
         GetVersion = 17,
         VersionInfo = 18,
+        SetDndHours = 19,
+        EnableDnd = 20,
+        GetDndState = 21,
+        DndState = 22,
 
         MessageAck = 50,
     };
@@ -47,7 +51,7 @@ public:
     template<typename T>
     T get(std::string_view key, T defaultValue) const
     {
-        return mJsonReport.value(key, T());
+        return mJsonReport.value(key, defaultValue);
     }
 
     template<typename T>

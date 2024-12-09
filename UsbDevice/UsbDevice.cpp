@@ -102,6 +102,7 @@ void UsbDevice::readSession()
         if (!reportOpt) {
             return;
         }
+
         const std::vector<uint8_t> report = *reportOpt;
         if (report.empty()) {
             continue;

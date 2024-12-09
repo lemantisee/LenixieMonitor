@@ -8,16 +8,5 @@ int main(int argc, char *argv[])
 
     new MainWindow;
 
-    // DeviceLogger devLogger;
-
-    // if (!devLogger.init(&usbDevice)) {
-    //     LOG_ERROR("Unable to init device logger client");
-    //     return 1;
-    // }
-
-    // while (true) {
-    //     devLogger.process();
-    // }
-
     return a.exec();
 }

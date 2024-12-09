@@ -12,6 +12,7 @@
 #include "ClockWidget.h"
 #include "NetworkWidget.h"
 #include "NtpWidget.h"
+#include "DndWidget.h"
 
 #include "Logger.h"
 
@@ -55,6 +56,7 @@ QWidget *MainWindow::buildTabWidget()
     tabWidget->addTab(new ClockWidget(mUsbDevice), tr("Clock"));
     tabWidget->addTab(new NetworkWidget(mUsbDevice), tr("Network"));
     tabWidget->addTab(new NtpWidget(mUsbDevice), tr("NTP"));
+    tabWidget->addTab(new DndWidget(mUsbDevice), tr("DND"));
 
     return tabWidget;
 }

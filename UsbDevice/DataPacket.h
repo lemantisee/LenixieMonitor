@@ -28,7 +28,5 @@ public:
     static DataPacket ackPacket();
 
 private:
-
-    std::array<uint8_t, 64> mData;
-    PacketType mType = UnknownPacket;
+    std::array<uint8_t, 64> mData = {};
 };

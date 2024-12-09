@@ -28,6 +28,7 @@ add_executable(${PROJECT_NAME}
 
     NetworkWidget/NetworkWidget.h NetworkWidget/NetworkWidget.cpp
     NetworkWidget/ConnectDialog.h NetworkWidget/ConnectDialog.cpp
+    DndWidget.h DndWidget.cpp
 )
 
 add_subdirectory(UsbDevice)

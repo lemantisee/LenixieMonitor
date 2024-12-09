@@ -21,8 +21,6 @@ const size_t payloadIndex = 4;
 
 DataPacket::DataPacket(const std::string &payload)
 {
-    mData.fill(0);
-
     if (payload.size() > payloadMaxSize) {
         LOG_ERROR("Too big payload size");
         return;
@@ -40,7 +38,7 @@ uint8_t *DataPacket::data() { return mData.data(); }
 
 size_t DataPacket::size() const { return mData.size(); }
 
-DataPacket::PacketType DataPacket::getType() const { return mType; }
+DataPacket::PacketType DataPacket::getType() const { return PacketType(mData[typeIndex]); }
 
 std::string DataPacket::getPayload() const
 {
@@ -83,8 +81,6 @@ std::vector<DataPacket> DataPacket::fromString(const std::string &msg)
 
 DataPacket DataPacket::fromReport(const std::vector<uint8_t> &report)
 {
-    DataPacket packet;
-
     if (report.size() != 64) {
         return {};
     }
@@ -96,17 +92,15 @@ DataPacket DataPacket::fromReport(const std::vector<uint8_t> &report)
         return {};
     }
 
-    std::memcpy(packet.mData.data(), report.data(), 2);
-
-    packet.mType = PacketType(report[typeIndex]);
-
+    PacketType type = PacketType(report[typeIndex]);
     const uint8_t payloadSize = report[sizeIndex];
-    if ((packet.mData[sizeIndex] == 0 && packet.mType != PacketAck) || payloadSize > 60) {
+
+    if ((payloadSize == 0 && type != PacketAck) || payloadSize > 60) {
         return {};
     }
 
-    packet.mData[sizeIndex] = payloadSize;
-    std::memcpy(&packet.mData[payloadIndex], &report[payloadIndex], payloadSize);
+    DataPacket packet;
+    std::memcpy(packet.mData.data(), report.data(), report.size());
 
     return packet;
 }
@@ -115,7 +109,6 @@ DataPacket DataPacket::ackPacket()
 {
     DataPacket packet;
 
-    packet.mData.fill(0);
     std::memcpy(packet.mData.data() + headerIndex, &header, 2);
     packet.mData[typeIndex] = PacketAck;
 
